@@ -1,9 +1,20 @@
-Tasks = new Mongo.Collection("tasks");
 
 if (Meteor.isServer) {
   // This code only runs on the server
   Meteor.publish("tasks", function () {
-    return Tasks.find();
+
+    this.added("items", Meteor.uuid(), {
+      text: "task1",
+      checked: true,
+      createdAt: new Date(),
+    });
+    this.added("items", Meteor.uuid(), {
+      text: "task2",
+      createdAt: new Date(),
+    });
+
+
+    // return Tasks.find();
     // return Tasks.find({
     //   $or: [
     //     { private: {$ne: true} },
@@ -15,6 +26,7 @@ if (Meteor.isServer) {
 
 if (Meteor.isClient) {
   // This code only runs on the client
+  Tasks = new Mongo.Collection("items");
   Meteor.subscribe("tasks");
 
   Template.body.helpers({
