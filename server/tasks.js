@@ -11,7 +11,6 @@ Meteor.publish("tasks", function () {
 
   tasks.observeChanges({
     added: function(id, fields){
-      console.log('added', id, fields)
       self.added("items", id, fields);
     }
   });
@@ -19,7 +18,7 @@ Meteor.publish("tasks", function () {
 });
 
 
-// Tasks model constructor
+// Tasks observable model - constructor
 function Tasks(){
   var callbacksArray = [];
   var tasks = [
@@ -49,6 +48,12 @@ function Tasks(){
       callbacksArray.forEach(function(callbacks){
         callbacks.added(Meteor.uuid(), task);
       });
+    },
+    remove: function(id){
+      tasks = tasks.filter(function(item){
+        
+      });
+
     }
   }
 }
@@ -72,4 +77,35 @@ Meteor.methods({
     };
     tasks.add(newTask);
   },
+
+  deleteTask: function (taskId) {
+    restrictOwner(taskId);
+    Tasks.remove(taskId);
+  },
+
+  setChecked: function (taskId, setChecked) {
+    restrictPublicOrOwner(taskId);
+    Tasks.update(taskId, { $set: { checked: setChecked} });
+  },
+
+  setPrivate: function (taskId, setPrivate) {
+    restrictOwner(taskId);
+    Tasks.update(taskId, { $set: { private: setPrivate} });  
+  }
+});
+
+var restrict = R.curry(function(predicate, taskId){
+  var task = Tasks.findOne(taskId);
+
+  if (!predicate(task)) {
+    throw new Meteor.Error("not-authorized");
+  }
+});
+
+var restrictOwner = restrict(function (task){
+  return task.owner === Meteor.userId();
+});
+
+var restrictPublicOrOwner = restrict(function (task){
+  return !task.private || task.owner === Meteor.userId();
 });

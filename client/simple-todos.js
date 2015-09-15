@@ -13,7 +13,11 @@ Template.body.helpers({
       return Tasks.find({checked: {$ne: true}}, {sort: {createdAt: -1}});
     } else {
       // Otherwise, return all of the tasks
-      return Tasks.find({}, {sort: {createdAt: -1}});
+      var tasks = Tasks.find({}, {sort: {createdAt: -1}});
+      tasks.forEach(function(task){
+        console.log(task)
+      })
+      return tasks;
     }
   },
   hideCompleted: function () {
@@ -74,20 +78,17 @@ Accounts.ui.config({
 Meteor.methods({
 
   addTask: function (text) {
-    console.log("addTask method on client")
-    Tasks.insert({text: 'text',createdAt: new Date()});
     // Make sure the user is logged in before inserting a task
-    // if (! Meteor.userId()) {
-    //   throw new Meteor.Error("not-authorized");
-    // }
+    if (! Meteor.userId()) {
+      throw new Meteor.Error("not-authorized");
+    }
  
-    // Tasks._collection.insert({
-    //   _id: Tasks._makeNewID(),
-    //   text: text+'!',
-    //   createdAt: new Date(),
-    //   owner: Meteor.userId(),
-    //   username: Meteor.user().username
-    // });
+    Tasks.insert({
+      text: text + ' loading...',
+      createdAt: new Date(),
+      owner: Meteor.userId(),
+      username: Meteor.user().username
+    });
   },
 });
 
