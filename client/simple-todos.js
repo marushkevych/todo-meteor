@@ -14,9 +14,9 @@ Template.body.helpers({
     } else {
       // Otherwise, return all of the tasks
       var tasks = Tasks.find({}, {sort: {createdAt: -1}});
-      tasks.forEach(function(task){
-        console.log(task)
-      })
+      // tasks.forEach(function(task){
+      //   console.log(task)
+      // })
       return tasks;
     }
   },
@@ -108,18 +108,4 @@ Meteor.methods({
   }  
 });
 
-var restrict = R.curry(function(predicate, taskId){
-  var task = Tasks.findOne(taskId);
 
-  if (!predicate(task)) {
-    throw new Meteor.Error("not-authorized");
-  }
-});
-
-var restrictOwner = restrict(function (task){
-  return task.owner === Meteor.userId();
-});
-
-var restrictPublicOrOwner = restrict(function (task){
-  return !task.private || task.owner === Meteor.userId();
-});
