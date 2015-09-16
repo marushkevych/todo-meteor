@@ -5,13 +5,16 @@ Meteor.publish("tasks", function () {
   var self = this;
   // initial tasks
   tasks.getTasks().forEach(function(task){
-    self.added("items", task.id, task);
+    self.added("items", task._id, task);
   });
   self.ready();
 
   tasks.observeChanges({
     added: function(id, fields){
       self.added("items", id, fields);
+    },
+    removed: function(id){
+      self.removed("items", id);
     }
   });
 
@@ -23,13 +26,13 @@ function Tasks(){
   var callbacksArray = [];
   var tasks = [
     {
-      id: Meteor.uuid(),
+      _id: Meteor.uuid(),
       text: "task1",
       checked: true,
       createdAt: new Date(),        
     },
     {
-      id: Meteor.uuid(),
+      _id: Meteor.uuid(),
       text: "task2",
       createdAt: new Date(),        
     }
@@ -46,12 +49,15 @@ function Tasks(){
     add: function(task){
       tasks.push(task);
       callbacksArray.forEach(function(callbacks){
-        callbacks.added(Meteor.uuid(), task);
+        callbacks.added(task._id, task);
       });
     },
     remove: function(id){
       tasks = tasks.filter(function(item){
-        
+        return item._id !== id;
+      });
+      callbacksArray.forEach(function(callbacks){
+        callbacks.removed(id);
       });
 
     }
@@ -60,7 +66,7 @@ function Tasks(){
 
 Meteor.methods({
 
-  addTask: function (text) {
+  addTask: function (task) {
     Meteor._sleepForMs(3000);
 
     console.log('addTask method')
@@ -69,43 +75,23 @@ Meteor.methods({
       throw new Meteor.Error("not-authorized");
     }
 
-    var newTask = {
-      text: text,
-      createdAt: new Date(),
-      owner: Meteor.userId(),
-      username: Meteor.user().username
-    };
-    tasks.add(newTask);
+    tasks.add(task);
   },
 
   deleteTask: function (taskId) {
-    restrictOwner(taskId);
-    Tasks.remove(taskId);
+    Meteor._sleepForMs(3000);
+    tasks.remove(taskId);
   },
 
   setChecked: function (taskId, setChecked) {
-    restrictPublicOrOwner(taskId);
+    Meteor._sleepForMs(3000);
     Tasks.update(taskId, { $set: { checked: setChecked} });
   },
 
   setPrivate: function (taskId, setPrivate) {
-    restrictOwner(taskId);
+    Meteor._sleepForMs(3000);
     Tasks.update(taskId, { $set: { private: setPrivate} });  
   }
 });
 
-var restrict = R.curry(function(predicate, taskId){
-  var task = Tasks.findOne(taskId);
 
-  if (!predicate(task)) {
-    throw new Meteor.Error("not-authorized");
-  }
-});
-
-var restrictOwner = restrict(function (task){
-  return task.owner === Meteor.userId();
-});
-
-var restrictPublicOrOwner = restrict(function (task){
-  return !task.private || task.owner === Meteor.userId();
-});
