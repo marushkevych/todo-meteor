@@ -3,6 +3,7 @@ Tasks = new TasksCollection();
 
 Meteor.publish("tasks", function () {
   var self = this;
+
   // initial tasks
   Tasks.getTasks().forEach(function(task){
     self.added("items", task._id, task);
@@ -10,27 +11,13 @@ Meteor.publish("tasks", function () {
   self.ready();
 
   Tasks.observeChanges(self);
-
 });
 
 
 // tasks observable model - constructor
 function TasksCollection(){
   var listeners = [];
-  var tasks = [
-    {
-      _id: Meteor.uuid(),
-      text: "task1",
-      checked: true,
-      createdAt: new Date(),        
-    },
-    {
-      _id: Meteor.uuid(),
-      text: "task2",
-      createdAt: new Date(),        
-    }
-  ];
-
+  var tasks = [];
 
   return {
     findOne: function(taskId){
@@ -55,10 +42,23 @@ function TasksCollection(){
       listeners.forEach(function(listener){
         listener.removed("items", id);
       });
+    },
+    update: function(id, fields){
+      updateObject(this.findOne(id), fields);
 
+      listeners.forEach(function(listener){
+        listener.changed("items", id, fields);
+      });
     }
   }
 }
+
+function updateObject(obj, fields){
+  R.forEach(function(key){
+    obj[key] = fields[key];
+  })(R.keys(fields));
+}
+
 
 Meteor.methods({
 
@@ -82,12 +82,12 @@ Meteor.methods({
 
   setChecked: function (taskId, setChecked) {
     Meteor._sleepForMs(1000);
-    Tasks.update(taskId, { $set: { checked: setChecked} });
+    Tasks.update(taskId,{ checked: setChecked});
   },
 
   setPrivate: function (taskId, setPrivate) {
     Meteor._sleepForMs(1000);
-    Tasks.update(taskId, { $set: { private: setPrivate} });  
+    Tasks.update(taskId,{ private: setPrivate});  
   }
 });
 
