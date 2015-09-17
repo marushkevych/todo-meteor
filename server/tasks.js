@@ -1,5 +1,5 @@
 // This code only runs on the server
-Tasks = new TasksCollection();
+Tasks = new Mongo.Collection;
 
 Meteor.publish("tasks", function () {
   var self = this;
@@ -65,7 +65,6 @@ Meteor.methods({
   addTask: function (task) {
     Meteor._sleepForMs(1000);
 
-    console.log('addTask method')
     // Make sure the user is logged in before inserting a task
     if (! Meteor.userId()) {
       throw new Meteor.Error("not-authorized");
