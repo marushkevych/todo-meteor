@@ -15,18 +15,19 @@ Meteor.publish("tasks", function () {
 
   self.ready();
 
-  cursor.observeChanges({
-    added: function(id, fields){
-      self.added("items", id, fields);
-    },
-    removed: function(id){
-      self.removed("items", id);
-    },
-    changed: function(id, fields){
-      self.changed("items", id, fields);
-    }
-  });
+  cursor.observeChanges(generateCallbacks(self, 'items'));
+
 });
+
+function generateCallbacks(publishContext, collectionName){
+  var methods = ['added', 'removed', 'changed'];
+  var callbacks = {};
+  methods.forEach(function(method){
+    callbacks[method] = R.curry(publishContext[method])(collectionName).bind(publishContext);
+  });
+  console.log(callbacks)
+  return callbacks;
+}
 
 
 Meteor.methods({
