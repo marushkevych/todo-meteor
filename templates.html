@@ -1,0 +1,20 @@
+<body>
+<h1>Today's scores!</h1>
+    {{> players}}
+</body>
+
+
+<template name="players">
+    {{#each topScorers}}
+        {{#if leagueIs "junior"}}
+            <div>Junior: {{name}} {{> playerScore}}</div>
+        {{/if}}
+        {{#if leagueIs "senior"}}
+            <div>Senior: {{name}} {{> playerScore}}</div>
+        {{/if}}
+    {{/each}}
+</template>
+
+<template name="playerScore">
+    {{getScore}} <span class="give-points">Give Points</span>
+</template>
